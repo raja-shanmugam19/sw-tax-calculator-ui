@@ -1,5 +1,5 @@
 <template>
-  <div v-if="calculationHistory.length > 0" class="history">
+  <div v-if="calculationHistory.length > 0" class="history mt-5">
     <v-data-table
       :headers="headers"
       :items="calculationHistory"
@@ -15,11 +15,10 @@
       <template v-slot:item="props">
         <tr>
           <td>{{ props.item.username }}</td>
-          <td>{{ props.item.taxYear }}</td>
           <td>{{ props.item.superContribution }}</td>
           <td>{{ props.item.grossAmount }}</td>
-          <td v-if="props.item.incomeType === 'grossAndSuper'">
-            {{ props.item.grossAndSuper }}
+          <td>
+            {{ props.item.grossPlusSuperannuationAmount }}
           </td>
           <td>{{ props.item.taxAmount }}</td>
           <td>{{ props.item.netAmount }}</td>
@@ -41,8 +40,6 @@
 
 <script setup>
 import { ref, defineProps } from "vue";
-import API_URLS from "../../server/api/api"
-
 const calculationHistory = ref([]);
 
 const snackbar = ref({ show: false, message: "" });
@@ -60,7 +57,9 @@ const deleteCalculation = async (calculationId) => {
     );
 
     if (response.ok) {
-      calculationHistory.value = calculationHistory.value.filter(item => item._id !== calculationId);
+      calculationHistory.value = calculationHistory.value.filter(
+        (item) => item._id !== calculationId
+      );
       snackbar.value.message = "Record deleted successfully";
       snackbar.value.show = true;
     } else {
@@ -77,7 +76,7 @@ const headers = [
   { title: "Gross Amount", value: "grossAmount" },
   {
     title: "Gross + Superannuation Amount",
-    value: "grossAndSuper",
+    value: "grossPlusSuperannuationAmount",
     align: "center",
   },
   { title: "Tax Amount", value: "taxAmount" },

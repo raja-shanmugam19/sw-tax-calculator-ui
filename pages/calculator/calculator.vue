@@ -8,6 +8,7 @@
             label="Username"
             v-model="formData.username"
             required
+            :rules="[(v) => !!v || 'Username is required']"
           ></VTextField>
 
           <VRadioGroup v-model="formData.incomeType" row>
@@ -24,6 +25,7 @@
             type="number"
             min="0.01"
             required
+            :rules="[(v) => !!v || 'Income is required']"
           ></VTextField>
 
           <VTextField
@@ -32,6 +34,7 @@
             type="number"
             min="10.5"
             required
+            :rules="[(v) => !!v || 'Superannuation percentage is required']"
           ></VTextField>
 
           <VTextField
@@ -39,6 +42,7 @@
             v-model="formData.taxYear"
             type="number"
             required
+            :rules="[(v) => !!v || 'Tax year is required']"
           ></VTextField>
 
           <VBtn type="submit" color="primary">Calculate</VBtn>
@@ -54,18 +58,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { useField, useForm } from "vee-validate";
-import * as yup from "yup";
+import { ref } from "vue";
 import "vuetify/styles";
-import { createVuetify } from "vuetify";
-import * as components from "vuetify/components";
-import * as directives from "vuetify/directives";
 import CalculationHistory from "./calculation-history";
-const vuetify = createVuetify({
-  components,
-  directives,
-});
 
 const formData = ref({
   username: "",
@@ -86,6 +81,12 @@ const taxRates = ref([
 ]);
 
 const handleSubmit = async () => {
+  if (!validateForm()) {
+    snackbar.value.message = "Please fill all mandatory fields.";
+    snackbar.value.show = true;
+    return;
+  }
+
   const superContribution =
     formData.value.income * (formData.value.superannuationPercentage / 100);
 
@@ -152,6 +153,7 @@ const calculateTax = (grossAmount) => {
   if (!taxRates.value) return 0;
 
   let tax = 0;
+
   for (const bracket of taxRates.value) {
     if (grossAmount <= bracket.upperLimit) {
       tax += (grossAmount - bracket.lowerLimit) * bracket.rate;
@@ -165,27 +167,13 @@ const calculateTax = (grossAmount) => {
   return tax;
 };
 
-const {
-  handleSubmit: validateAndSubmit,
-  errors,
-  setFieldError,
-  resetField,
-} = useForm({
-  validationSchema: yup.object({
-    username: yup.string().required("Username is required"),
-    income: yup
-      .number()
-      .min(0.01, "Income must be greater than $0.00")
-      .required("Income is required"),
-    superannuationPercentage: yup
-      .number()
-      .min(10.5, "Minimum 10.5%")
-      .required("Superannuation percentage is required"),
-    taxYear: yup.number().required("Tax year is required"),
-  }),
-});
-
-const clearError = (field) => {
-  resetField(field);
+const validateForm = () => {
+  return (
+    formData.value.username &&
+    formData.value.incomeType &&
+    formData.value.income !== null &&
+    formData.value.superannuationPercentage !== null &&
+    formData.value.taxYear !== null
+  );
 };
 </script>
